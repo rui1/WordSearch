@@ -100,7 +100,7 @@ public class GridWords {
         }
         return ans;
     }
-    
+
     public static ArrayList<String> dfsWords(ArrayList<ArrayList<Character>> grid, SearchState start,Trie lookup){
         ArrayList<String> ans = new ArrayList<String>();
         int r = grid.size();
