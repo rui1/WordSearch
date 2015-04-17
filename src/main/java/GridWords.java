@@ -54,6 +54,7 @@ public class GridWords {
             System.out.println(line.toString());
             grid.add(parsed);
             line = infile.readLine();
+            System.out.println("grid " + parsed.toString());
         }
 
         return grid;
@@ -85,13 +86,16 @@ public class GridWords {
         int cn = grid.get(0).size();
         for(int i =0; i<rn; i++){
             for(int j =0; j<cn;j++){
-                String prefix = "";
+                /*String prefix = "";
                 Pair coord = new Pair(i,j);
                 HashSet<Pair> pathnode = new HashSet<Pair>();
                 SearchState startCell = new SearchState(coord,prefix,pathnode);
                 System.out.println("start cell"+ startCell.prefix+" "+startCell.coord.x+" "+startCell.coord.y);
-                ArrayList<String> ansWords = dfsWords(grid,startCell,lookup);
-                System.out.println("current ans"+ ansWords.toString());
+                ArrayList<String> ansWords = dfsWords(grid,startCell,lookup);*/
+                Pair coord = new Pair(i,j);
+                SearchNode startCell = new SearchNode(coord,1);
+                ArrayList<String> ansWords = search(grid,startCell,lookup);
+                System.out.println("current ans "+ ansWords.toString());
                 for(String word: ansWords){
                     ans.add(word);
                 }
@@ -100,6 +104,47 @@ public class GridWords {
         }
         return ans;
     }
+    public static ArrayList<String> search(ArrayList<ArrayList<Character>> grid, SearchNode start, Trie lookup){
+        ArrayList<String> ans = new ArrayList<String>();
+        int r  = grid.size();
+        int c = grid.get(0).size();
+        Stack<SearchNode> stack = new Stack<SearchNode>();
+        stack.push(start);
+        Path pathnodes = new Path();
+        while(!stack.isEmpty()){
+            SearchNode curCell = stack.pop();
+            Pair curCoord = curCell.coord;
+            char curChar = grid.get(curCoord.x).get(curCoord.y);
+            while(!pathnodes.isEmpty() && pathnodes.peek().depth>=curCell.depth){
+                pathnodes.pop();
+            }
+            String curWord = pathnodes.getPrefix()+curChar;
+            System.out.println("current word " + curWord);
+            boolean[] checks = lookup.contains(curWord);
+            if(checks[0]){
+                if(checks[1]) ans.add(curWord);
+                System.out.println("current cell's depth: "+curCell.depth+" next cell's coord"+ curCell.coord.x+" "+curCell.coord.y);
+                for(Pair p : MOVES){
+                    SearchNode nextCell = curCell.update(p);
+                    System.out.println("next cell's depth: "+nextCell.depth+" next cell's coord"+ nextCell.coord.x+" "+nextCell.coord.y);
+                    if(nextCell.isOutBound(r)){
+                        System.out.println("next " + nextCell.coord.x + ' ' + nextCell.coord.y+" "+pathnodes.contain(nextCell));
+                        if(!pathnodes.contain(nextCell)) {
+                            System.out.println("added to stack!");
+                            stack.push(nextCell);
+                        }
+                    }
+                }
+            }
+            if(pathnodes.isEmpty() || pathnodes.peek().depth==curCell.depth-1){
+                System.out.println("update pathnodes "+curChar+" added!");
+                pathnodes.push(curCell,curChar);
+            }
+
+        }
+        return ans;
+    }
+
 
     public static ArrayList<String> dfsWords(ArrayList<ArrayList<Character>> grid, SearchState start,Trie lookup){
         ArrayList<String> ans = new ArrayList<String>();
@@ -138,6 +183,74 @@ public class GridWords {
         }
         return  ans;
 
+    }
+
+    public static class Path{
+        private final HashSet<Pair> existnodes = new HashSet<Pair>();
+        private final Stack<SearchNode>pathnodes = new Stack<SearchNode>();
+        private final StringBuilder prefix= new StringBuilder();
+        public boolean isEmpty(){
+            return pathnodes.isEmpty();
+        }
+        public void push(SearchNode node, char c){
+            pathnodes.add(node);
+            prefix.append(c);
+            existnodes.add(node.coord);
+            System.out.println("existnodes updated!"+existnodes.size());
+        }
+        public SearchNode pop(){
+            SearchNode popedNode= pathnodes.pop();
+            existnodes.remove(popedNode.coord);
+            prefix.deleteCharAt(prefix.length()-1);
+            return popedNode;
+        }
+        public SearchNode peek(){
+            return pathnodes.peek();
+        }
+        public boolean contain(SearchNode target){
+            System.out.println("targed "+target.coord.x+" "+target.coord.y+" "+existnodes.contains(target.coord));
+            return existnodes.contains(target.coord);
+        }
+        public String getPrefix(){
+            System.out.println("prefix "+ prefix.toString());
+            return prefix.toString();
+        }
+    }
+
+    public static class SearchNode{
+        private final Pair coord;
+        private final int depth;
+        public SearchNode(Pair coord, int depth){
+            this.coord = coord;
+            this.depth = depth;
+        }
+        public SearchNode update(Pair deltaPair){
+            Pair movedCoord = this.coord.move(deltaPair);
+            return new SearchNode(movedCoord,this.depth+1);
+        }
+        public boolean isOutBound(int n){
+            return coord.isOutBound(n);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof SearchNode)) return false;
+
+            SearchNode that = (SearchNode) o;
+
+            if (depth != that.depth) return false;
+            if (!coord.equals(that.coord)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = coord.hashCode();
+            result = 31 * result + depth;
+            return result;
+        }
     }
     public static class Pair {
         private final int x,y;
