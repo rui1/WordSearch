@@ -26,14 +26,13 @@ public class GridWords {
         FileReader fileReader = null;
         try {
             fileReader = new FileReader(fileName);
-            System.out.println(fileName);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         return new BufferedReader(fileReader);
     }
 
-    public ArrayList<Character> parseLine(String line ){
+    private ArrayList<Character> parseLine(String line ){
         StringTokenizer st = new StringTokenizer(line);
         ArrayList<Character> parsed = new ArrayList<Character>();
         int i = 0;
@@ -44,24 +43,22 @@ public class GridWords {
         }
         return parsed;
     }
-    public ArrayList<ArrayList<Character>> buildGridFromFile() throws IOException {
+    protected ArrayList<ArrayList<Character>> buildGridFromFile() throws IOException {
         ArrayList<ArrayList<Character>> grid = new ArrayList<ArrayList<Character>>();
         BufferedReader infile = createFileReader(this.gridFile);
         String dm = infile.readLine();
         String line = infile.readLine();
         while (line != null){
             ArrayList<Character> parsed = parseLine(line);
-            System.out.println(line.toString());
             grid.add(parsed);
             line = infile.readLine();
-            System.out.println("grid " + parsed.toString());
         }
 
         return grid;
     }
 
 
-    public Trie buildTrieFromDct() {
+    protected Trie buildTrieFromDct() {
         Trie head = new Trie();
         BufferedReader infile = createFileReader(dictFile);
         try {
@@ -79,7 +76,7 @@ public class GridWords {
 
         return head;
     }
-    public TreeSet<String> gridWordGenerator(Trie head, ArrayList<ArrayList<Character>> grid){
+    protected TreeSet<String> gridWordGenerator(Trie head, ArrayList<ArrayList<Character>> grid){
         Trie lookup = buildTrieFromDct();
         TreeSet<String> ans= new TreeSet<String>();
         int rn = grid.size();
@@ -90,7 +87,6 @@ public class GridWords {
                 Coordinate coord = new Coordinate(i,j);
                 SearchNode startCell = new SearchNode(coord,1);
                 ArrayList<String> ansWords = search(grid,startCell,lookup);
-                System.out.println("current ans "+ ansWords.toString());
                 for(String word: ansWords){
                     ans.add(word);
                 }
@@ -98,7 +94,7 @@ public class GridWords {
         }
         return ans;
     }
-    public static ArrayList<String> search(ArrayList<ArrayList<Character>> grid, SearchNode start, Trie lookup){
+    protected static ArrayList<String> search(ArrayList<ArrayList<Character>> grid, SearchNode start, Trie lookup){
         ArrayList<String> ans = new ArrayList<String>();
         int r  = grid.size();
         int c = grid.get(0).size();
@@ -113,25 +109,19 @@ public class GridWords {
                 pathnodes.pop();
             }
             String curWord = pathnodes.getPrefix()+curChar;
-            System.out.println("current word " + curWord);
             boolean[] checks = lookup.contains(curWord);
             if(checks[0]){
                 if(checks[1]) ans.add(curWord);
-                System.out.println("current cell's depth: "+curCell.depth+" next cell's coord"+ curCell.coord.x+" "+curCell.coord.y);
                 for(Coordinate p : MOVES){
                     SearchNode nextCell = curCell.update(p);
-                    System.out.println("next cell's depth: "+nextCell.depth+" next cell's coord"+ nextCell.coord.x+" "+nextCell.coord.y);
                     if(nextCell.isOutBound(r)){
-                        System.out.println("next " + nextCell.coord.x + ' ' + nextCell.coord.y+" "+pathnodes.contain(nextCell));
                         if(!pathnodes.contain(nextCell)) {
-                            System.out.println("added to stack!");
                             stack.push(nextCell);
                         }
                     }
                 }
             }
             if(pathnodes.isEmpty() || pathnodes.peek().depth==curCell.depth-1){
-                System.out.println("update pathnodes "+curChar+" added!");
                 pathnodes.push(curCell,curChar);
             }
 
@@ -140,7 +130,7 @@ public class GridWords {
     }
 
 
-    public static class Path{
+    private static class Path{
         private final HashSet<Coordinate> existnodes = new HashSet<Coordinate>();
         private final Stack<SearchNode>pathnodes = new Stack<SearchNode>();
         private final StringBuilder prefix= new StringBuilder();
@@ -151,7 +141,6 @@ public class GridWords {
             pathnodes.add(node);
             prefix.append(c);
             existnodes.add(node.coord);
-            System.out.println("existnodes updated!"+existnodes.size());
         }
         public SearchNode pop(){
             SearchNode popedNode= pathnodes.pop();
@@ -163,16 +152,14 @@ public class GridWords {
             return pathnodes.peek();
         }
         public boolean contain(SearchNode target){
-            System.out.println("targed "+target.coord.x+" "+target.coord.y+" "+existnodes.contains(target.coord));
             return existnodes.contains(target.coord);
         }
         public String getPrefix(){
-            System.out.println("prefix "+ prefix.toString());
             return prefix.toString();
         }
     }
 
-    public static class SearchNode{
+    private static class SearchNode{
         private final Coordinate coord;
         private final int depth;
         public SearchNode(Coordinate coord, int depth){
@@ -250,17 +237,6 @@ public class GridWords {
             System.out.println(s);
         }
     }
-
-    public static void main(String[] args) throws IOException {
-        long tic = System.currentTimeMillis();
-        String dctfile = "englishwords.txt";
-        String gridfile = "gridtest0.txt";
-        GridWords problem = new GridWords(dctfile,gridfile);
-        problem.run();
-        long tac = System.currentTimeMillis();
-        System.out.println((tac-tic)/1000);
-    }
-
 
 
 }

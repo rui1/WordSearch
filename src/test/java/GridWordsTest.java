@@ -10,10 +10,6 @@ public class GridWordsTest {
     private static final String TEST_DIR = "src/test/data/";
     private static final String DIC_DIR = "src/test/dictionaries/";
     private static final String ANS_DIR = "src/test/answers/";
-    @Test
-    public void testBuildGridFromFile() throws Exception {
-
-    }
 
     @Test
     public void testBuildTrie() throws Exception {
@@ -86,8 +82,5 @@ public class GridWordsTest {
         return ans;
 
     }
-    @Test
-    public void testSearch()throws Exception{
 
-    }
 }
