@@ -10,11 +10,11 @@ import java.util.*;
 public class GridWords {
     private final String dictFile;
     private final String gridFile;
-    private static final Pair[] MOVES = {
-            new Pair(0,1), new Pair(0,-1),
-            new Pair(1,0), new Pair(-1,0),
-            new Pair(1,1), new Pair(1,-1),
-            new Pair(-1,1), new Pair(-1,-1),
+    private static final Coordinate[] MOVES = {
+            new Coordinate(0,1), new Coordinate(0,-1),
+            new Coordinate(1,0), new Coordinate(-1,0),
+            new Coordinate(1,1), new Coordinate(1,-1),
+            new Coordinate(-1,1), new Coordinate(-1,-1),
 
     };
 
@@ -83,23 +83,17 @@ public class GridWords {
         Trie lookup = buildTrieFromDct();
         TreeSet<String> ans= new TreeSet<String>();
         int rn = grid.size();
+        if(rn==0){return ans;}
         int cn = grid.get(0).size();
         for(int i =0; i<rn; i++){
             for(int j =0; j<cn;j++){
-                /*String prefix = "";
-                Pair coord = new Pair(i,j);
-                HashSet<Pair> pathnode = new HashSet<Pair>();
-                SearchState startCell = new SearchState(coord,prefix,pathnode);
-                System.out.println("start cell"+ startCell.prefix+" "+startCell.coord.x+" "+startCell.coord.y);
-                ArrayList<String> ansWords = dfsWords(grid,startCell,lookup);*/
-                Pair coord = new Pair(i,j);
+                Coordinate coord = new Coordinate(i,j);
                 SearchNode startCell = new SearchNode(coord,1);
                 ArrayList<String> ansWords = search(grid,startCell,lookup);
                 System.out.println("current ans "+ ansWords.toString());
                 for(String word: ansWords){
                     ans.add(word);
                 }
-
             }
         }
         return ans;
@@ -113,7 +107,7 @@ public class GridWords {
         Path pathnodes = new Path();
         while(!stack.isEmpty()){
             SearchNode curCell = stack.pop();
-            Pair curCoord = curCell.coord;
+            Coordinate curCoord = curCell.coord;
             char curChar = grid.get(curCoord.x).get(curCoord.y);
             while(!pathnodes.isEmpty() && pathnodes.peek().depth>=curCell.depth){
                 pathnodes.pop();
@@ -124,7 +118,7 @@ public class GridWords {
             if(checks[0]){
                 if(checks[1]) ans.add(curWord);
                 System.out.println("current cell's depth: "+curCell.depth+" next cell's coord"+ curCell.coord.x+" "+curCell.coord.y);
-                for(Pair p : MOVES){
+                for(Coordinate p : MOVES){
                     SearchNode nextCell = curCell.update(p);
                     System.out.println("next cell's depth: "+nextCell.depth+" next cell's coord"+ nextCell.coord.x+" "+nextCell.coord.y);
                     if(nextCell.isOutBound(r)){
@@ -146,47 +140,8 @@ public class GridWords {
     }
 
 
-    public static ArrayList<String> dfsWords(ArrayList<ArrayList<Character>> grid, SearchState start,Trie lookup){
-        ArrayList<String> ans = new ArrayList<String>();
-        int r = grid.size();
-        int c = grid.get(0).size();
-        System.out.println("row, column"+r+c);
-        boolean[][] visited = new boolean[r][c];
-        visited[start.coord.x][start.coord.y]=true;
-        Stack<SearchState> stack = new Stack<SearchState>();
-        stack.push(start);
-        while(!stack.isEmpty()){
-            SearchState curCell = stack.pop();
-            System.out.println("current cell"+ curCell.prefix+" "+curCell.coord.x+" "+curCell.coord.y+" "+grid.get(curCell.coord.x).get(curCell.coord.y));
-            Pair curCoord = curCell.coord;
-            String  curWord = curCell.prefix+grid.get(curCoord.x).get(curCoord.y);
-
-            System.out.println("if statement "+lookup.contains(curWord)+" "+ curWord);
-            boolean[]checks = lookup.contains(curWord);
-            if(checks[0]){
-                if (checks[1]) ans.add(curWord);
-                for(Pair p : MOVES){
-                    Pair nextCoord = curCoord.move(p);
-                    HashSet<Pair> pathnode = new HashSet<Pair>(curCell.pathnode);
-                    pathnode.add(curCoord);
-                    if(nextCoord.isOutBound(r)){
-                        System.out.println("next " + nextCoord.x + ' ' + nextCoord.y);
-                        if(!pathnode.contains(nextCoord)) {
-                            System.out.println("not in, next coord "+nextCoord.x +' '+nextCoord.y);
-                            SearchState nextCell = new SearchState(nextCoord, curWord, pathnode);
-                            stack.push(nextCell);
-                        }
-                    }
-                }
-            }
-
-        }
-        return  ans;
-
-    }
-
     public static class Path{
-        private final HashSet<Pair> existnodes = new HashSet<Pair>();
+        private final HashSet<Coordinate> existnodes = new HashSet<Coordinate>();
         private final Stack<SearchNode>pathnodes = new Stack<SearchNode>();
         private final StringBuilder prefix= new StringBuilder();
         public boolean isEmpty(){
@@ -218,14 +173,14 @@ public class GridWords {
     }
 
     public static class SearchNode{
-        private final Pair coord;
+        private final Coordinate coord;
         private final int depth;
-        public SearchNode(Pair coord, int depth){
+        public SearchNode(Coordinate coord, int depth){
             this.coord = coord;
             this.depth = depth;
         }
-        public SearchNode update(Pair deltaPair){
-            Pair movedCoord = this.coord.move(deltaPair);
+        public SearchNode update(Coordinate deltaCoordinate){
+            Coordinate movedCoord = this.coord.move(deltaCoordinate);
             return new SearchNode(movedCoord,this.depth+1);
         }
         public boolean isOutBound(int n){
@@ -252,14 +207,14 @@ public class GridWords {
             return result;
         }
     }
-    public static class Pair {
+    public static class Coordinate {
         private final int x,y;
-        public Pair(int r, int c){
+        public Coordinate(int r, int c){
             this.x =r;
             this.y =c;
         }
-        public Pair move(Pair deltaPair){
-            return new Pair(this.x+deltaPair.x,this.y+deltaPair.y);
+        public Coordinate move(Coordinate deltaCoordinate){
+            return new Coordinate(this.x+ deltaCoordinate.x,this.y+ deltaCoordinate.y);
         }
         public boolean isOutBound(int n){
             return this.x<n && this.x>=0 && this.y<n && this.y>=0;
@@ -268,12 +223,12 @@ public class GridWords {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Pair)) return false;
+            if (!(o instanceof Coordinate)) return false;
 
-            Pair pair = (Pair) o;
+            Coordinate coordinate = (Coordinate) o;
 
-            if (x != pair.x) return false;
-            if (y != pair.y) return false;
+            if (x != coordinate.x) return false;
+            if (y != coordinate.y) return false;
 
             return true;
         }
@@ -284,18 +239,6 @@ public class GridWords {
             result = 31 * result + y;
             return result;
         }
-    }
-    public static class SearchState {
-        public final Pair coord;
-        public final String prefix;
-        public final HashSet<Pair> pathnode;
-
-        public SearchState(Pair coord, String prefix,HashSet<Pair> pathnode) {
-            this.coord = coord;
-            this.prefix = prefix;
-            this.pathnode = pathnode;
-        }
-
     }
 
     public void run() throws IOException {
@@ -311,7 +254,7 @@ public class GridWords {
     public static void main(String[] args) throws IOException {
         long tic = System.currentTimeMillis();
         String dctfile = "englishwords.txt";
-        String gridfile = "grid.txt";
+        String gridfile = "gridtest0.txt";
         GridWords problem = new GridWords(dctfile,gridfile);
         problem.run();
         long tac = System.currentTimeMillis();
